@@ -1,8 +1,9 @@
+import html
 import streamlit as st
-from handlers.image_captioner import caption_image
-from handlers.text_generator import generate_text
-from handlers.summarizer import summarize_text
-from handlers.sentiment import analyze_sentiment
+from image_captioner import caption_image
+from text_generator import generate_text
+from summarizer import summarize_text
+from sentiment import analyze_sentiment
 
 # ---------------------------------------------------------
 # إعدادات الصفحة العامة
@@ -221,9 +222,12 @@ if options == "Image Captioning":
     else:
         with st.spinner("🔮 Analyzing image..."):
             image_bytes = uploaded_file.read()
-            caption = caption_image(image_bytes)
+            try:
+                caption = caption_image(image_bytes)
+            except (ValueError, RuntimeError) as exc:
+                st.error(str(exc)); st.stop()
         st.image(image_bytes, caption="🖼️ Uploaded Image", use_container_width=True)
-        st.markdown(f'<div class="result-box"><b>📝 Caption:</b><br>{caption}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="result-box"><b>📝 Caption:</b><br>{html.escape(str(caption))}</div>', unsafe_allow_html=True)
 
 else:
     if not user_input or user_input.strip() == "":
@@ -232,8 +236,11 @@ else:
         if st.button(f"🚀 {options}"):
             selected_function = handlers[options]
             with st.spinner("✨ Processing..."):
-                result = selected_function(user_input)
-            st.markdown(f'<div class="result-box">{result}</div>', unsafe_allow_html=True)
+                try:
+                    result = selected_function(user_input)
+                except (ValueError, RuntimeError) as exc:
+                    st.error(str(exc)); st.stop()
+            st.markdown(f'<div class="result-box">{html.escape(str(result))}</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Footer

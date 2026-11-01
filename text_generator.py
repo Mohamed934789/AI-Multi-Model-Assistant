@@ -1,22 +1,11 @@
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
+from providers import openai_client, validate_text
 
-load_dotenv()
-
-api_key= os.getenv("OPENAI_API_KEY")
-
-client=OpenAI(api_key=api_key)
-
-def generate_text(prompt: str):
-    response= client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-
-            {"role": "user", "content": prompt}
-        ]
-
-    )
-  
-    return response.choices[0].message.content
-
+def generate_text(prompt, client=None):
+    prompt = validate_text(prompt)
+    client = client if client is not None else openai_client()
+    try:
+        response = client.chat.completions.create(model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"), messages=[{"role": "user", "content": prompt}])
+        return response.choices[0].message.content or "No text returned"
+    except Exception:
+        raise RuntimeError("Text generation failed; check provider access and configuration") from None
